@@ -13,9 +13,20 @@ import {
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-const fadeUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.2 // Wait for page transition
+        }
+    }
+}
+
+const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
 }
 
 export default function Dashboard() {
@@ -52,19 +63,24 @@ export default function Dashboard() {
     ]
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8">
-            <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
+        <motion.div
+            className="max-w-6xl mx-auto space-y-8"
+            variants={container}
+            initial="hidden"
+            animate="show"
+        >
+            <motion.div variants={item}>
                 <h1 className="text-2xl md:text-3xl font-bold">
                     {greeting()},{' '}
                     <span className="bg-gradient-to-r from-primary-light to-secondary-light bg-clip-text text-transparent">
                         {user?.display_name || 'Athlete'}
                     </span>
                 </h1>
-                <p className="text-text-muted mt-1">Here&apos;s your training overview</p>
+                <p className="text-text-muted mt-1">Here's your training overview</p>
             </motion.div>
 
             {/* Quick Actions */}
-            <motion.div {...fadeUp} transition={{ delay: 0.2 }} className="flex flex-wrap gap-3">
+            <motion.div variants={item} className="flex flex-wrap gap-3">
                 <button
                     onClick={() => {
                         if (!activeWorkout && user) {
@@ -90,9 +106,9 @@ export default function Dashboard() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, i) => (
-                    <motion.div key={stat.label} {...fadeUp} transition={{ delay: 0.3 + i * 0.1 }}
-                        className="bg-surface border border-border rounded-2xl p-5 hover:border-primary/30 transition-colors"
+                {stats.map((stat) => (
+                    <motion.div key={stat.label} variants={item}
+                        className="glass glass-hover rounded-2xl p-5"
                     >
                         <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-3`}>
                             <stat.icon className="w-5 h-5 text-primary-light" />
@@ -104,7 +120,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Workouts */}
-            <motion.div {...fadeUp} transition={{ delay: 0.7 }}>
+            <motion.div variants={item}>
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold">Recent Workouts</h2>
                     <button onClick={() => navigate('/analytics')} className="text-sm text-primary-light hover:underline flex items-center gap-1">
@@ -120,20 +136,24 @@ export default function Dashboard() {
                 ) : (
                     <div className="space-y-3">
                         {workouts.slice(0, 5).map((w) => (
-                            <div key={w.id} className="bg-surface border border-border rounded-xl p-4 flex items-center justify-between hover:border-primary/30 transition-colors cursor-pointer">
+                            <motion.div
+                                key={w.id}
+                                variants={item}
+                                className="glass glass-hover rounded-xl p-4 flex items-center justify-between cursor-pointer"
+                            >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                                         <Dumbbell className="w-5 h-5 text-primary-light" />
                                     </div>
                                     <div>
-                                        <p className="font-medium">{w.name}</p>
+                                        <p className="font-medium text-white/90">{w.name}</p>
                                         <p className="text-sm text-text-muted">
                                             {w.exercises.length} exercises • {w.duration_minutes || 0} min • {new Date(w.started_at).toLocaleDateString()}
                                         </p>
                                     </div>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-text-muted" />
-                            </div>
+                                <ChevronRight className="w-5 h-5 text-text-muted/50" />
+                            </motion.div>
                         ))}
                     </div>
                 )}
@@ -141,25 +161,29 @@ export default function Dashboard() {
 
             {/* Recent PRs */}
             {personalRecords.length > 0 && (
-                <motion.div {...fadeUp} transition={{ delay: 0.8 }}>
+                <motion.div variants={item}>
                     <h2 className="text-xl font-bold mb-4">🏆 Recent PRs</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {personalRecords.slice(0, 4).map((pr) => (
-                            <div key={pr.id} className="bg-surface border border-accent/30 rounded-xl p-4 flex items-center gap-4">
+                            <motion.div
+                                key={pr.id}
+                                variants={item}
+                                className="glass glass-hover rounded-xl p-4 flex items-center gap-4"
+                            >
                                 <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
                                     <Award className="w-5 h-5 text-accent" />
                                 </div>
                                 <div>
-                                    <p className="font-medium">{pr.exercise_name}</p>
+                                    <p className="font-medium text-white/90">{pr.exercise_name}</p>
                                     <p className="text-sm text-text-muted">
                                         {pr.weight_kg}kg × {pr.reps} reps • Est. 1RM: {pr.estimated_1rm}kg
                                     </p>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 </motion.div>
             )}
-        </div>
+        </motion.div>
     )
 }

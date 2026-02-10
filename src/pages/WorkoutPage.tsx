@@ -56,7 +56,12 @@ export default function WorkoutPage() {
     // ─── No Active Workout ─────────────────────────────────────────
     if (!activeWorkout) {
         return (
-            <div className="max-w-xl mx-auto text-center py-20">
+            <motion.div
+                className="max-w-xl mx-auto text-center py-20"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+            >
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -83,7 +88,7 @@ export default function WorkoutPage() {
                         Let's Go! 💪
                     </button>
                 </div>
-            </div>
+            </motion.div>
         )
     }
 
@@ -93,7 +98,12 @@ export default function WorkoutPage() {
     )
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6">
+        <motion.div
+            className="max-w-3xl mx-auto space-y-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+        >
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
@@ -184,8 +194,8 @@ export default function WorkoutPage() {
                                                     <button
                                                         onClick={() => updateSet(exIdx, sIdx, { is_warmup: !s.is_warmup })}
                                                         className={`px-1.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition ${s.is_warmup
-                                                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                                                : 'bg-surface-light text-text-muted border border-border hover:border-amber-500/30 hover:text-amber-400'
+                                                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                                            : 'bg-surface-light text-text-muted border border-border hover:border-amber-500/30 hover:text-amber-400'
                                                             }`}
                                                         title={s.is_warmup ? 'Warm-up set (click to toggle)' : 'Working set (click to toggle)'}
                                                     >
@@ -281,6 +291,6 @@ export default function WorkoutPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </motion.div>
     )
 }
