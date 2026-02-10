@@ -24,28 +24,29 @@ import {
 import { motion } from 'framer-motion'
 
 // ─── Muscle Heatmap SVG Component ────────────────────────────────────
-// Positions on a 400×340 SVG. Front body centered at x≈100, Back body centered at x≈300.
-const MUSCLE_POSITIONS: Record<MuscleGroup, { x: number; y: number; w: number; h: number; label: string }> = {
-    // ── FRONT (centered at x≈100) ──
-    neck: { x: 88, y: 38, w: 24, h: 14, label: 'Neck' },
-    traps: { x: 78, y: 54, w: 44, h: 16, label: 'Traps' },
-    front_delts: { x: 52, y: 72, w: 20, h: 20, label: 'F.Delt' },
-    side_delts: { x: 128, y: 72, w: 20, h: 20, label: 'S.Delt' },
-    chest: { x: 74, y: 76, w: 52, h: 28, label: 'Chest' },
-    biceps: { x: 48, y: 100, w: 16, h: 34, label: 'Biceps' },
-    triceps: { x: 136, y: 100, w: 16, h: 34, label: 'Triceps' },
-    abs: { x: 82, y: 112, w: 36, h: 46, label: 'Abs' },
-    obliques: { x: 72, y: 128, w: 10, h: 26, label: 'Obl' },
-    forearms: { x: 42, y: 140, w: 14, h: 30, label: 'F.Arm' },
-    quads: { x: 70, y: 184, w: 24, h: 54, label: 'Quads' },
-    calves: { x: 73, y: 254, w: 18, h: 36, label: 'Calves' },
-    // ── BACK (centered at x≈300) ──
-    rear_delts: { x: 252, y: 72, w: 20, h: 20, label: 'R.Delt' },
-    upper_back: { x: 276, y: 76, w: 48, h: 24, label: 'Up.Back' },
-    lats: { x: 272, y: 102, w: 56, h: 34, label: 'Lats' },
-    lower_back: { x: 282, y: 140, w: 36, h: 22, label: 'Lo.Back' },
-    glutes: { x: 278, y: 172, w: 44, h: 24, label: 'Glutes' },
-    hamstrings: { x: 272, y: 204, w: 22, h: 46, label: 'Hams' },
+// SVG Paths for a 400x400 viewing area (Front ~100x, Back ~300x)
+const MUSCLE_CONFIG: Record<MuscleGroup, { path: string; label: string }> = {
+    // ── FRONT VIEW ──
+    neck: { path: "M92,35 Q100,42 108,35 L108,50 Q100,55 92,50 Z", label: 'Neck' },
+    traps: { path: "M75,55 L92,50 L108,50 L125,55 L115,65 L85,65 Z", label: 'Traps' },
+    front_delts: { path: "M55,65 Q65,60 75,65 L70,85 Q55,80 50,70 Z M125,65 Q135,60 145,65 L150,70 Q145,80 130,85 L125,65 Z", label: 'Front Delts' },
+    side_delts: { path: "M45,70 Q55,65 60,75 L55,95 Q40,85 45,70 Z M140,75 Q145,65 155,70 Q160,85 145,95 L140,75 Z", label: 'Side Delts' },
+    chest: { path: "M75,70 Q100,75 125,70 L120,95 Q100,105 80,95 Z", label: 'Chest' },
+    biceps: { path: "M55,95 Q65,100 62,130 L48,130 Q45,100 55,95 Z M145,95 Q155,100 152,130 L138,130 Q135,100 145,95 Z", label: 'Biceps' },
+    forearms: { path: "M45,135 Q58,140 55,170 L42,170 Q40,140 45,135 Z M145,170 Q142,140 155,135 Q160,140 158,170 Z", label: 'Forearms' },
+    abs: { path: "M85,100 L115,100 L112,150 Q100,155 88,150 Z", label: 'Abs' },
+    obliques: { path: "M70,100 L85,100 L88,150 L75,145 Z M125,145 L112,150 L115,100 L130,100 Z", label: 'Obliques' },
+    quads: { path: "M70,165 Q85,160 100,165 L95,230 Q85,235 75,230 Z M100,165 Q115,160 130,165 L125,230 Q115,235 105,230 Z", label: 'Quads' },
+    calves: { path: "M70,240 Q85,245 80,290 L70,290 Q65,245 70,240 Z M120,290 Q115,245 130,240 Q135,245 130,290 Z", label: 'Calves' },
+
+    // ── BACK VIEW ──
+    rear_delts: { path: "M245,70 Q255,65 260,75 L255,90 Q245,85 245,70 Z M340,75 Q345,65 355,70 Q355,85 345,90 L340,75 Z", label: 'Rear Delts' },
+    upper_back: { path: "M260,70 L340,70 L330,110 Q300,120 270,110 Z", label: 'Upper Back' },
+    lats: { path: "M260,110 L270,110 L280,155 L260,145 Z M340,110 L330,110 L320,155 L340,145 Z", label: 'Lats' },
+    triceps: { path: "M245,95 Q255,100 252,130 L238,130 Q235,100 245,95 Z M345,95 Q355,100 352,130 L338,130 Q335,100 345,95 Z", label: 'Triceps' },
+    lower_back: { path: "M280,120 L320,120 L315,155 Q300,160 285,155 Z", label: 'Lower Back' },
+    glutes: { path: "M275,160 Q300,160 325,160 L320,195 Q300,205 280,195 Z", label: 'Glutes' },
+    hamstrings: { path: "M275,200 Q290,205 285,235 L275,235 Z M325,200 Q310,205 315,235 L325,235 Z", label: 'Hamstrings' },
 }
 
 function getHeatColor(intensity: number): string {
@@ -74,66 +75,31 @@ function MuscleHeatmap({ data }: { data: MuscleUsageData[] }) {
                 {/* Divider */}
                 <line x1="200" y1="26" x2="200" y2="310" stroke="#334155" strokeWidth="1" strokeDasharray="5 4" />
 
-                {/* ─── FRONT BODY SILHOUETTE ─── */}
-                <ellipse cx="100" cy="30" rx="16" ry="14" fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M68,55 Q62,55 60,68 L58,92 Q56,110 62,125 L66,165 Q68,175 76,178 L124,178 Q132,175 134,165 L138,125 Q144,110 142,92 L140,68 Q138,55 132,55 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M60,68 Q48,66 44,78 L38,140 Q36,158 40,176 L44,176 Q50,158 48,140 L54,92 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M140,68 Q152,66 156,78 L162,140 Q164,158 160,176 L156,176 Q150,158 152,140 L146,92 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M76,178 Q72,180 68,190 L62,252 Q60,272 64,298 L86,298 Q88,272 86,252 L92,190 Q96,180 100,178 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M100,178 Q104,180 108,190 L114,252 Q116,272 112,298 L136,298 Q138,272 140,252 L134,190 Q130,180 124,178 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-
-                {/* ─── BACK BODY SILHOUETTE ─── */}
-                <ellipse cx="300" cy="30" rx="16" ry="14" fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M268,55 Q262,55 260,68 L258,92 Q256,110 262,125 L266,165 Q268,175 276,178 L324,178 Q332,175 334,165 L338,125 Q344,110 342,92 L340,68 Q338,55 332,55 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M260,68 Q248,66 244,78 L238,140 Q236,158 240,176 L244,176 Q250,158 248,140 L254,92 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M340,68 Q352,66 356,78 L362,140 Q364,158 360,176 L356,176 Q350,158 352,140 L346,92 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M276,178 Q272,180 268,190 L262,252 Q260,272 264,298 L286,298 Q288,272 286,252 L292,190 Q296,180 300,178 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
-                <path d="M300,178 Q304,180 308,190 L314,252 Q316,272 312,298 L336,298 Q338,272 340,252 L334,190 Q330,180 324,178 Z"
-                    fill="#1e1b2e" stroke="#334155" strokeWidth="1" />
+                {/* Body Outline (Silhouettes) */}
+                {/* Front Head */}
+                <circle cx="100" cy="30" r="14" fill="#1e1b2e" stroke="#334155" />
+                {/* Back Head */}
+                <circle cx="300" cy="30" r="14" fill="#1e1b2e" stroke="#334155" />
 
                 {/* Muscle groups overlay */}
-                {(Object.entries(MUSCLE_POSITIONS) as [MuscleGroup, typeof MUSCLE_POSITIONS[MuscleGroup]][]).map(
-                    ([muscle, pos]) => {
+                {(Object.entries(MUSCLE_CONFIG) as [MuscleGroup, typeof MUSCLE_CONFIG[MuscleGroup]][]).map(
+                    ([muscle, config]) => {
                         const muscleData = dataMap[muscle]
                         const intensity = muscleData?.intensity || 0
                         const isHovered = hoveredMuscle === muscle
 
                         return (
-                            <g key={muscle}>
-                                <rect
-                                    x={pos.x}
-                                    y={pos.y}
-                                    width={pos.w}
-                                    height={pos.h}
-                                    rx={6}
-                                    fill={getHeatColor(intensity)}
-                                    stroke={isHovered ? '#f1f5f9' : intensity > 0 ? getHeatColor(intensity) : '#334155'}
-                                    strokeWidth={isHovered ? 2 : 1}
-                                    opacity={isHovered ? 1 : 0.85}
-                                    className="cursor-pointer transition-all duration-200"
-                                    onMouseEnter={() => setHoveredMuscle(muscle)}
-                                    onMouseLeave={() => setHoveredMuscle(null)}
-                                />
-                                <text
-                                    x={pos.x + pos.w / 2}
-                                    y={pos.y + pos.h / 2 + 3}
-                                    textAnchor="middle"
-                                    className="fill-text pointer-events-none"
-                                    fontSize={8}
-                                    fontWeight={500}
-                                >
-                                    {pos.label}
-                                </text>
-                            </g>
+                            <path
+                                key={muscle}
+                                d={config.path}
+                                fill={getHeatColor(intensity)}
+                                stroke={isHovered ? '#f1f5f9' : '#1e1b2e'}
+                                strokeWidth={isHovered ? 2 : 1}
+                                className="cursor-pointer transition-all duration-200 hover:opacity-100"
+                                style={{ opacity: intensity > 0 ? 1 : 0.4 }}
+                                onMouseEnter={() => setHoveredMuscle(muscle)}
+                                onMouseLeave={() => setHoveredMuscle(null)}
+                            />
                         )
                     }
                 )}
@@ -141,8 +107,8 @@ function MuscleHeatmap({ data }: { data: MuscleUsageData[] }) {
 
             {/* Hover tooltip */}
             {hoveredMuscle && dataMap[hoveredMuscle] && (
-                <div className="absolute top-4 right-4 bg-surface-light border border-border rounded-xl p-3 shadow-xl text-sm">
-                    <p className="font-bold">{MUSCLE_POSITIONS[hoveredMuscle].label}</p>
+                <div className="absolute top-4 right-4 bg-surface-light border border-border rounded-xl p-3 shadow-xl text-sm z-50 pointer-events-none">
+                    <p className="font-bold">{MUSCLE_CONFIG[hoveredMuscle].label}</p>
                     <p className="text-text-muted">
                         Volume: {dataMap[hoveredMuscle]!.total_volume.toLocaleString()} kg
                     </p>

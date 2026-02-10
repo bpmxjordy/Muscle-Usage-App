@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Workout, WorkoutExercise, WorkoutSet, Routine, PersonalRecord, MuscleGroup, MuscleUsageData } from '../types'
+import type { Workout, WorkoutSet, Routine, PersonalRecord, MuscleGroup, MuscleUsageData } from '../types'
 import * as workoutService from '../services/workout.service'
 import * as routineService from '../services/routine.service'
 import * as prService from '../services/pr.service'

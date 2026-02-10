@@ -208,7 +208,7 @@ export default function HealthPage() {
                     </div>
                     <div>
                         <label className="text-xs text-text-muted mb-1 block">Gender</label>
-                        <select value={gender} onChange={(e) => setGender(e.target.value)} className={inputClass}>
+                        <select value={gender} onChange={(e) => setGender(e.target.value as any)} className={inputClass}>
                             <option value="male">Male</option>
                             <option value="female">Female</option>
                             <option value="other">Other</option>
@@ -216,7 +216,7 @@ export default function HealthPage() {
                     </div>
                     <div>
                         <label className="text-xs text-text-muted mb-1 block">Activity</label>
-                        <select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value)} className={inputClass}>
+                        <select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value as any)} className={inputClass}>
                             <option value="sedentary">Sedentary</option>
                             <option value="light">Light</option>
                             <option value="moderate">Moderate</option>
@@ -294,7 +294,7 @@ export default function HealthPage() {
                                     color: '#f1f5f9',
                                     fontSize: '12px',
                                 }}
-                                formatter={(v: number, n: string) => [`${Math.round(v)} kcal`, n]}
+                                formatter={(v: any, n: any) => [`${Math.round(Number(v))} kcal`, n]}
                             />
                         </PieChart>
                     </ResponsiveContainer>

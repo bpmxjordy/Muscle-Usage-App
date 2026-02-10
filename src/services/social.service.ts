@@ -54,7 +54,7 @@ export async function getFeed(userId: string): Promise<FeedItemWithDetails[]> {
 // ─── Post a feed item ───────────────────────────────────────────────
 export async function postFeedItem(
     userId: string,
-    item: { type: 'workout' | 'pr' | 'routine'; title: string; description?: string; workout_id?: string; pr_id?: string; routine_id?: string }
+    item: { type: 'workout' | 'pr' | 'routine' | 'post'; title: string; description?: string; workout_id?: string; pr_id?: string; routine_id?: string }
 ) {
     const { error } = await supabase.from('feed_items').insert({
         user_id: userId,

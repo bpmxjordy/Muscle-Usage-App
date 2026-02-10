@@ -9,11 +9,10 @@ import {
     TrendingUp,
     Search,
     Send,
-    X,
     UserPlus,
-    UserMinus,
     Loader2,
     RefreshCw,
+    PenSquare,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -25,6 +24,7 @@ import {
     followUser,
     unfollowUser,
     getSuggestedUsers,
+    postFeedItem,
 } from '../services/social.service'
 import type { FeedItemWithDetails, Comment } from '../services/social.service'
 
@@ -44,6 +44,7 @@ function getTypeIcon(type: FeedItemWithDetails['type']) {
         case 'workout': return Dumbbell
         case 'pr': return Award
         case 'routine': return TrendingUp
+        default: return MessageCircle // For 'post' type
     }
 }
 
@@ -52,6 +53,7 @@ function getTypeBg(type: FeedItemWithDetails['type']) {
         case 'workout': return 'bg-primary/15 text-primary-light'
         case 'pr': return 'bg-accent/15 text-accent'
         case 'routine': return 'bg-secondary/15 text-secondary-light'
+        default: return 'bg-surface-light text-text-muted'
     }
 }
 
@@ -59,7 +61,7 @@ function getTypeBg(type: FeedItemWithDetails['type']) {
 function CommentPanel({
     feedItemId,
     userId,
-    onClose,
+
 }: {
     feedItemId: string
     userId: string
@@ -164,6 +166,8 @@ export default function SocialPage() {
     const [following, setFollowing] = useState<{ id: string; username: string; display_name: string; avatar_url: string | null }[]>([])
     const [suggested, setSuggested] = useState<{ id: string; username: string; display_name: string; avatar_url: string | null }[]>([])
     const [searchTerm, setSearchTerm] = useState('')
+    const [postContent, setPostContent] = useState('')
+    const [isPosting, setIsPosting] = useState(false)
     const [openComments, setOpenComments] = useState<string | null>(null)
     const [loadingFeed, setLoadingFeed] = useState(true)
     const [loadingSocial, setLoadingSocial] = useState(true)
@@ -206,6 +210,24 @@ export default function SocialPage() {
     const handleRefresh = async () => {
         setRefreshing(true)
         await Promise.all([loadFeed(), loadSocial()])
+    }
+
+    const handleCreatePost = async () => {
+        if (!userId || !postContent.trim()) return
+        setIsPosting(true)
+        try {
+            await postFeedItem(userId, {
+                type: 'post',
+                title: user?.display_name || 'User check-in',
+                description: postContent.trim(),
+            })
+            setPostContent('')
+            await loadFeed()
+        } catch {
+            // silently fail
+        } finally {
+            setIsPosting(false)
+        }
     }
 
     const handleToggleLike = async (itemId: string) => {
@@ -271,6 +293,36 @@ export default function SocialPage() {
                 >
                     <RefreshCw className={`w-4 h-4 text-text-muted ${refreshing ? 'animate-spin' : ''}`} />
                 </button>
+            </div>
+
+            {/* Create Post */}
+            <div className="bg-surface border border-border rounded-2xl p-4">
+                <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {user?.display_name?.[0] || 'U'}
+                    </div>
+                    <div className="flex-1">
+                        <textarea
+                            value={postContent}
+                            onChange={(e) => setPostContent(e.target.value)}
+                            placeholder="Share your progress, throw out a challenge, or just say hi..."
+                            className="w-full bg-transparent border-0 resize-none focus:ring-0 p-0 text-sm h-20 placeholder:text-text-muted"
+                        />
+                        <div className="flex items-center justify-between border-t border-border pt-3 mt-1">
+                            <span className="text-xs text-text-muted">
+                                {postContent.length}/280
+                            </span>
+                            <button
+                                onClick={handleCreatePost}
+                                disabled={!postContent.trim() || isPosting}
+                                className="px-4 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:brightness-110 transition disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isPosting ? <Loader2 className="w-3 h-3 animate-spin" /> : <PenSquare className="w-3 h-3" />}
+                                Post
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Following Bar */}
@@ -422,8 +474,8 @@ export default function SocialPage() {
                                             setOpenComments(openComments === item.id ? null : item.id)
                                         }
                                         className={`flex items-center gap-1.5 text-sm transition ${openComments === item.id
-                                                ? 'text-primary-light'
-                                                : 'text-text-muted hover:text-primary-light'
+                                            ? 'text-primary-light'
+                                            : 'text-text-muted hover:text-primary-light'
                                             }`}
                                     >
                                         <MessageCircle className="w-4 h-4" />

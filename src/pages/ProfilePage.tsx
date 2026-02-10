@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/authStore'
 import { useWorkoutStore } from '../stores/workoutStore'
-import { User, Mail, Calendar, Dumbbell, Award, TrendingUp, LogOut, Save, Camera, Loader2, Check } from 'lucide-react'
+import { Dumbbell, Award, TrendingUp, LogOut, Save, Camera, Loader2, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
