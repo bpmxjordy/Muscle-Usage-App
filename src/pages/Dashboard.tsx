@@ -14,6 +14,7 @@ import {
     Zap,
     X,
     Calendar,
+    Target,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -22,15 +23,15 @@ const container = {
     show: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.2
+            staggerChildren: 0.08,
+            delayChildren: 0.15
         }
     }
 }
 
 const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } }
 }
 
 function getStreak(workouts: Workout[]): number {
@@ -47,7 +48,6 @@ function getStreak(workouts: Workout[]): number {
 
     let streak = 0
     const oneDay = 86400000
-    // Allow today or yesterday to start the streak
     const start = dates[0]
     if (start !== today.getTime() && start !== today.getTime() - oneDay) return 0
 
@@ -91,10 +91,10 @@ export default function Dashboard() {
     }
 
     const stats = [
-        { label: 'Total Workouts', value: totalWorkouts, icon: Dumbbell, bg: 'bg-primary/10', color: 'text-primary-light' },
-        { label: 'Total Volume', value: `${(totalVolume / 1000).toFixed(1)}t`, icon: TrendingUp, bg: 'bg-secondary/10', color: 'text-secondary-light' },
-        { label: 'Personal Records', value: totalPRs, icon: Award, bg: 'bg-accent/10', color: 'text-accent' },
-        { label: 'Last Workout', value: lastWorkout ? `${lastWorkout.duration_minutes || 0}m` : 'N/A', icon: Clock, bg: 'bg-success/10', color: 'text-success' },
+        { label: 'Workouts', value: totalWorkouts, icon: Dumbbell, gradient: 'from-primary/15 to-primary/5', iconColor: 'text-primary-light', border: 'border-primary/10' },
+        { label: 'Volume', value: `${(totalVolume / 1000).toFixed(1)}t`, icon: TrendingUp, gradient: 'from-secondary/15 to-secondary/5', iconColor: 'text-secondary-light', border: 'border-secondary/10' },
+        { label: 'PRs', value: totalPRs, icon: Award, gradient: 'from-accent/15 to-accent/5', iconColor: 'text-accent', border: 'border-accent/10' },
+        { label: 'Last Session', value: lastWorkout ? `${lastWorkout.duration_minutes || 0}m` : '—', icon: Clock, gradient: 'from-success/15 to-success/5', iconColor: 'text-success', border: 'border-success/10' },
     ]
 
     return (
@@ -104,24 +104,32 @@ export default function Dashboard() {
             initial="hidden"
             animate="show"
         >
+            {/* Greeting + Streak */}
             <motion.div variants={item} className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold">
                         {greeting()},{' '}
-                        <span className="bg-gradient-to-r from-primary-light to-secondary-light bg-clip-text text-transparent">
+                        <span className="shimmer-text">
                             {user?.display_name || 'Athlete'}
                         </span>
                     </h1>
-                    <p className="text-text-muted mt-1">Here's your training overview</p>
+                    <p className="text-text-muted mt-1 text-sm">Here's your training overview</p>
                 </div>
                 {streak > 0 && (
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/10 border border-accent/20">
-                        <Flame className="w-5 h-5 text-accent animate-pulse" />
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', damping: 15 }}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/15 glow-accent"
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                            <Flame className="w-5 h-5 text-accent animate-pulse" />
+                        </div>
                         <div>
-                            <p className="text-lg font-bold text-accent">{streak}</p>
+                            <p className="text-xl font-bold text-accent stat-value">{streak}</p>
                             <p className="text-[10px] text-text-muted leading-none">day streak</p>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
             </motion.div>
 
@@ -134,7 +142,7 @@ export default function Dashboard() {
                         }
                         navigate('/workout')
                     }}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-medium text-sm hover:brightness-110 transition shadow-lg shadow-primary/20"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-semibold text-sm hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 transition-all shadow-lg shadow-primary/15"
                 >
                     {activeWorkout ? (
                         <><Flame className="w-4 h-4 animate-pulse" /> Continue Workout</>
@@ -143,8 +151,14 @@ export default function Dashboard() {
                     )}
                 </button>
                 <button
+                    onClick={() => navigate('/ai-trainer')}
+                    className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-secondary/10 to-secondary/5 border border-secondary/15 text-secondary-light font-medium text-sm hover:border-secondary/30 hover:shadow-lg hover:shadow-secondary/10 transition-all"
+                >
+                    <Target className="w-4 h-4" /> AI Trainer
+                </button>
+                <button
                     onClick={() => navigate('/routines')}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-light border border-border text-text-muted font-medium text-sm hover:bg-surface-lighter hover:text-text transition"
+                    className="flex items-center gap-2 px-5 py-3 rounded-xl bg-surface-light border border-border text-text-muted font-medium text-sm hover:bg-surface-lighter hover:text-text hover:border-primary/20 transition-all"
                 >
                     <Zap className="w-4 h-4" /> My Routines ({routines.length})
                 </button>
@@ -154,12 +168,12 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat) => (
                     <motion.div key={stat.label} variants={item}
-                        className="glass glass-hover rounded-2xl p-5"
+                        className={`bg-gradient-to-br ${stat.gradient} border ${stat.border} rounded-2xl p-5 hover:scale-[1.02] transition-transform duration-200`}
                     >
-                        <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-3`}>
-                            <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                        <div className={`w-10 h-10 rounded-xl bg-surface/60 flex items-center justify-center mb-3`}>
+                            <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
                         </div>
-                        <p className="text-2xl font-bold">{stat.value}</p>
+                        <p className="text-2xl font-bold stat-value">{stat.value}</p>
                         <p className="text-sm text-text-muted mt-0.5">{stat.label}</p>
                     </motion.div>
                 ))}
@@ -169,28 +183,32 @@ export default function Dashboard() {
             <motion.div variants={item}>
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold">Recent Workouts</h2>
-                    <button onClick={() => navigate('/analytics')} className="text-sm text-primary-light hover:underline flex items-center gap-1">
-                        View All <ChevronRight className="w-4 h-4" />
+                    <button onClick={() => navigate('/analytics')} className="text-sm text-primary-light hover:underline flex items-center gap-1 group">
+                        View All <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                 </div>
                 {workouts.length === 0 ? (
-                    <div className="bg-surface border border-border rounded-2xl p-10 text-center">
-                        <Dumbbell className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-40" />
-                        <p className="text-text-muted">No workouts yet.</p>
-                        <p className="text-sm text-text-muted mt-1">Start your first workout to see it here!</p>
+                    <div className="gradient-border">
+                        <div className="bg-surface rounded-2xl p-12 text-center">
+                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                <Dumbbell className="w-8 h-8 text-primary-light opacity-60" />
+                            </div>
+                            <p className="text-text-muted font-medium">No workouts yet</p>
+                            <p className="text-sm text-text-muted mt-1">Start your first workout to track your progress!</p>
+                        </div>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {workouts.slice(0, 5).map((w) => (
+                    <div className="space-y-2">
+                        {workouts.slice(0, 5).map((w, idx) => (
                             <motion.div
                                 key={w.id}
                                 variants={item}
                                 onClick={() => setSelectedWorkout(w)}
-                                className="glass glass-hover rounded-xl p-4 flex items-center justify-between cursor-pointer group"
+                                className="bg-surface/60 border border-border/50 hover:border-primary/20 rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-all hover:bg-surface/80"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                        <Dumbbell className="w-5 h-5 text-primary-light" />
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
+                                        <span className="text-sm font-bold text-primary-light">{idx + 1}</span>
                                     </div>
                                     <div>
                                         <p className="font-medium text-white/90">{w.name}</p>
@@ -199,7 +217,7 @@ export default function Dashboard() {
                                         </p>
                                     </div>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-text-muted/50 group-hover:text-primary-light transition" />
+                                <ChevronRight className="w-5 h-5 text-text-muted/30 group-hover:text-primary-light group-hover:translate-x-0.5 transition-all" />
                             </motion.div>
                         ))}
                     </div>
@@ -209,19 +227,21 @@ export default function Dashboard() {
             {/* Recent PRs */}
             {personalRecords.length > 0 && (
                 <motion.div variants={item}>
-                    <h2 className="text-xl font-bold mb-4">🏆 Recent PRs</h2>
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <Award className="w-5 h-5 text-accent" /> Recent PRs
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {personalRecords.slice(0, 4).map((pr) => (
                             <motion.div
                                 key={pr.id}
                                 variants={item}
-                                className="glass glass-hover rounded-xl p-4 flex items-center gap-4"
+                                className="bg-gradient-to-br from-accent/10 to-accent/3 border border-accent/10 rounded-xl p-4 flex items-center gap-4 hover:border-accent/20 transition-all"
                             >
-                                <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0">
                                     <Award className="w-5 h-5 text-accent" />
                                 </div>
-                                <div>
-                                    <p className="font-medium text-white/90">{pr.exercise_name}</p>
+                                <div className="min-w-0">
+                                    <p className="font-medium text-white/90 truncate">{pr.exercise_name}</p>
                                     <p className="text-sm text-text-muted">
                                         {pr.weight_kg}kg × {pr.reps} reps • Est. 1RM: {pr.estimated_1rm}kg
                                     </p>
@@ -243,7 +263,7 @@ export default function Dashboard() {
                         <motion.div
                             initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-surface border border-border rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col"
+                            className="bg-surface border border-border rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"
                         >
                             {/* Header */}
                             <div className="p-5 border-b border-border flex items-center justify-between">
@@ -262,28 +282,28 @@ export default function Dashboard() {
 
                             {/* Workout Summary Stats */}
                             <div className="grid grid-cols-3 gap-3 p-5 border-b border-border">
-                                <div className="text-center">
-                                    <p className="text-xl font-bold text-primary-light">{selectedWorkout.exercises.length}</p>
-                                    <p className="text-xs text-text-muted">Exercises</p>
+                                <div className="text-center p-3 rounded-xl bg-primary/5">
+                                    <p className="text-xl font-bold text-primary-light stat-value">{selectedWorkout.exercises.length}</p>
+                                    <p className="text-xs text-text-muted mt-0.5">Exercises</p>
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-xl font-bold text-secondary-light">
+                                <div className="text-center p-3 rounded-xl bg-secondary/5">
+                                    <p className="text-xl font-bold text-secondary-light stat-value">
                                         {selectedWorkout.exercises.reduce((a, e) => a + e.sets.length, 0)}
                                     </p>
-                                    <p className="text-xs text-text-muted">Total Sets</p>
+                                    <p className="text-xs text-text-muted mt-0.5">Total Sets</p>
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-xl font-bold text-accent">
+                                <div className="text-center p-3 rounded-xl bg-accent/5">
+                                    <p className="text-xl font-bold text-accent stat-value">
                                         {(selectedWorkout.exercises.reduce((a, e) => a + e.sets.reduce((b, s) => b + s.reps * s.weight_kg, 0), 0) / 1000).toFixed(1)}t
                                     </p>
-                                    <p className="text-xs text-text-muted">Volume</p>
+                                    <p className="text-xs text-text-muted mt-0.5">Volume</p>
                                 </div>
                             </div>
 
                             {/* Exercises */}
                             <div className="flex-1 overflow-y-auto p-5 space-y-4">
                                 {selectedWorkout.exercises.map((we, idx) => (
-                                    <div key={we.id} className="bg-surface-light border border-border rounded-xl p-4">
+                                    <div key={we.id} className="bg-surface-light/50 border border-border/50 rounded-xl p-4">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary-light">
                                                 {idx + 1}

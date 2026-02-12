@@ -126,25 +126,25 @@ export default function WorkoutPage() {
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ type: 'spring' }}
-                    className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-secondary mx-auto mb-6 flex items-center justify-center shadow-xl shadow-primary/20"
+                    transition={{ type: 'spring', damping: 15 }}
+                    className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary via-primary-dark to-secondary mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-primary/30 glow-primary"
                 >
-                    <Dumbbell className="w-10 h-10 text-white" />
+                    <Dumbbell className="w-12 h-12 text-white" />
                 </motion.div>
-                <h1 className="text-2xl font-bold mb-2">Start a New Workout</h1>
-                <p className="text-text-muted mb-8">Give your workout a name and let's go!</p>
+                <h1 className="text-3xl font-bold mb-2">Start a New Workout</h1>
+                <p className="text-text-muted mb-8 text-sm">Give your workout a name and let's crush it</p>
 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
                     <input
                         type="text"
                         value={workoutName}
                         onChange={(e) => setWorkoutName(e.target.value)}
                         placeholder="e.g., Push Day, Leg Day..."
-                        className="px-4 py-3 bg-surface border border-border rounded-xl text-text placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
+                        className="flex-1 px-5 py-3.5 bg-surface/60 border border-border/50 rounded-xl text-text placeholder:text-text-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all"
                     />
                     <button
                         onClick={() => user && startWorkout(workoutName || 'Workout', user.id)}
-                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-semibold hover:brightness-110 transition shadow-lg shadow-primary/25"
+                        className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-semibold hover:brightness-110 hover:shadow-lg hover:shadow-primary/30 transition-all shadow-lg shadow-primary/20"
                     >
                         Let's Go! 💪
                     </button>
@@ -169,21 +169,27 @@ export default function WorkoutPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">{activeWorkout.name}</h1>
-                    <p className="text-text-muted flex items-center gap-2">
-                        <Timer className="w-4 h-4" /> {elapsed} min elapsed
-                    </p>
+                    <div className="flex items-center gap-3 mt-1">
+                        <span className="flex items-center gap-1.5 text-sm text-text-muted">
+                            <Timer className="w-4 h-4 text-primary-light" /> {elapsed} min
+                        </span>
+                        <span className="text-border">•</span>
+                        <span className="text-sm text-text-muted">{activeWorkout.exercises.length} exercises</span>
+                        <span className="text-border">•</span>
+                        <span className="text-sm text-text-muted">{activeWorkout.exercises.reduce((a, e) => a + e.sets.length, 0)} sets</span>
+                    </div>
                 </div>
                 <div className="flex gap-2">
                     <button
                         onClick={cancelWorkout}
-                        className="px-4 py-2 rounded-xl bg-surface-light border border-border text-text-muted text-sm hover:text-danger hover:border-danger/50 transition"
+                        className="p-2.5 rounded-xl bg-surface-light border border-border text-text-muted text-sm hover:text-danger hover:border-danger/30 hover:bg-danger/5 transition-all"
                     >
                         <X className="w-4 h-4" />
                     </button>
                     <button
                         onClick={handleFinish}
                         disabled={isFinishing}
-                        className="px-5 py-2 rounded-xl bg-gradient-to-r from-success to-success text-white font-medium text-sm flex items-center gap-2 hover:brightness-110 transition shadow-lg shadow-success/20 disabled:opacity-50"
+                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-success to-emerald-600 text-white font-medium text-sm flex items-center gap-2 hover:brightness-110 hover:shadow-lg hover:shadow-success/25 transition-all shadow-lg shadow-success/15 disabled:opacity-50"
                     >
                         {isFinishing ? (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -201,7 +207,7 @@ export default function WorkoutPage() {
                         key={we.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-surface border border-border rounded-2xl overflow-hidden"
+                        className="bg-surface/60 border border-border/50 rounded-2xl overflow-hidden hover:border-primary/15 transition-colors"
                     >
                         {/* Exercise Header */}
                         <div className="flex items-center justify-between p-4">
@@ -274,10 +280,10 @@ export default function WorkoutPage() {
                                     )}
 
                                     {/* Add Set Button */}
-                                    <div className="px-4 py-3 bg-surface-light/50 border-t border-border flex items-center gap-3">
+                                    <div className="px-4 py-3 bg-surface-light/30 border-t border-border/50 flex items-center gap-3">
                                         <button
                                             onClick={() => { addSet(exIdx); startRestTimer() }}
-                                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:brightness-110 transition"
+                                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-primary-dark text-white text-sm font-medium hover:brightness-110 hover:shadow-md hover:shadow-primary/20 transition-all"
                                         >
                                             <Plus className="w-4 h-4" /> Add Set
                                         </button>
@@ -297,8 +303,8 @@ export default function WorkoutPage() {
             <AnimatePresence>
                 {isResting && (
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                        className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface border border-primary/30 rounded-2xl px-6 py-4 shadow-2xl shadow-primary/20 flex items-center gap-5"
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface/95 backdrop-blur-xl border border-primary/20 rounded-2xl px-6 py-4 shadow-2xl shadow-primary/15 glow-primary flex items-center gap-5"
                     >
                         {/* Circular progress */}
                         <div className="relative w-14 h-14">
@@ -349,9 +355,9 @@ export default function WorkoutPage() {
             {/* Add Exercise Button */}
             <button
                 onClick={() => setShowExercisePicker(true)}
-                className="w-full py-4 rounded-2xl border-2 border-dashed border-border text-text-muted hover:border-primary/50 hover:text-primary-light transition flex items-center justify-center gap-2 text-sm font-medium"
+                className="w-full py-4 rounded-2xl border-2 border-dashed border-border/50 text-text-muted hover:border-primary/40 hover:text-primary-light hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium group"
             >
-                <Plus className="w-5 h-5" /> Add Exercise
+                <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" /> Add Exercise
             </button>
 
             {/* Exercise Picker Modal */}
@@ -365,21 +371,21 @@ export default function WorkoutPage() {
                         <motion.div
                             initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-surface border border-border rounded-2xl w-full max-w-lg max-h-[70vh] overflow-hidden"
+                            className="bg-surface border border-border/50 rounded-2xl w-full max-w-lg max-h-[70vh] overflow-hidden shadow-2xl"
                         >
-                            <div className="p-4 border-b border-border">
-                                <div className="flex items-center justify-between mb-3">
+                            <div className="p-5 border-b border-border/50">
+                                <div className="flex items-center justify-between mb-4">
                                     <h2 className="font-bold text-lg">Add Exercise</h2>
-                                    <button onClick={() => setShowExercisePicker(false)} className="p-1 rounded-lg hover:bg-surface-light transition">
+                                    <button onClick={() => setShowExercisePicker(false)} className="p-1.5 rounded-lg hover:bg-surface-light transition">
                                         <X className="w-5 h-5 text-text-muted" />
                                     </button>
                                 </div>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/60" />
                                     <input
                                         type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                         placeholder="Search exercises or muscle groups..."
-                                        className="w-full pl-10 pr-4 py-2.5 bg-surface-light border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
+                                        className="w-full pl-11 pr-4 py-3 bg-surface-light/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all"
                                         autoFocus
                                     />
                                 </div>
@@ -389,14 +395,19 @@ export default function WorkoutPage() {
                                     <button
                                         key={ex.id}
                                         onClick={() => { addExercise(ex.id); setShowExercisePicker(false); setSearchTerm('') }}
-                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-light transition text-left"
+                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-primary/5 transition-all text-left group"
                                     >
-                                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:from-primary/25 group-hover:to-primary/10 transition-all">
                                             <Dumbbell className="w-4 h-4 text-primary-light" />
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium">{ex.name}</p>
-                                            <p className="text-xs text-text-muted">{ex.primary_muscles.join(', ')} • {ex.equipment}</p>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium truncate">{ex.name}</p>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                {ex.primary_muscles.slice(0, 2).map(m => (
+                                                    <span key={m} className="px-1.5 py-0.5 rounded bg-surface-light text-[10px] text-text-muted">{m}</span>
+                                                ))}
+                                                <span className="text-[10px] text-text-muted/60">• {ex.equipment}</span>
+                                            </div>
                                         </div>
                                     </button>
                                 ))}
