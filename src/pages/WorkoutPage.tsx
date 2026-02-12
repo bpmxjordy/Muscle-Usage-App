@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useWorkoutStore } from '../stores/workoutStore'
 import { useAuthStore } from '../stores/authStore'
 import { exercises as exerciseDB } from '../data/exercises'
@@ -12,6 +12,9 @@ import {
     Timer,
     ChevronDown,
     ChevronUp,
+    Play,
+    Pause,
+    SkipForward,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -34,6 +37,64 @@ export default function WorkoutPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [expandedExercise, setExpandedExercise] = useState<number | null>(null)
     const [isFinishing, setIsFinishing] = useState(false)
+
+    // Rest timer
+    const [restTime, setRestTime] = useState(90) // default 90s
+    const [restRemaining, setRestRemaining] = useState(0)
+    const [isResting, setIsResting] = useState(false)
+    const [isPaused, setIsPaused] = useState(false)
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+    const startRestTimer = useCallback((duration?: number) => {
+        const d = duration || restTime
+        setRestRemaining(d)
+        setIsResting(true)
+        setIsPaused(false)
+    }, [restTime])
+
+    const stopRestTimer = useCallback(() => {
+        setIsResting(false)
+        setRestRemaining(0)
+        setIsPaused(false)
+        if (intervalRef.current) clearInterval(intervalRef.current)
+    }, [])
+
+    useEffect(() => {
+        if (isResting && !isPaused && restRemaining > 0) {
+            intervalRef.current = setInterval(() => {
+                setRestRemaining(prev => {
+                    if (prev <= 1) {
+                        setIsResting(false)
+                        // Play a notification beep
+                        try {
+                            const ctx = new AudioContext()
+                            const osc = ctx.createOscillator()
+                            const gain = ctx.createGain()
+                            osc.connect(gain)
+                            gain.connect(ctx.destination)
+                            osc.frequency.value = 880
+                            gain.gain.value = 0.3
+                            osc.start()
+                            osc.stop(ctx.currentTime + 0.15)
+                            setTimeout(() => {
+                                const osc2 = ctx.createOscillator()
+                                const gain2 = ctx.createGain()
+                                osc2.connect(gain2)
+                                gain2.connect(ctx.destination)
+                                osc2.frequency.value = 1100
+                                gain2.gain.value = 0.3
+                                osc2.start()
+                                osc2.stop(ctx.currentTime + 0.2)
+                            }, 200)
+                        } catch { /* audio not available */ }
+                        return 0
+                    }
+                    return prev - 1
+                })
+            }, 1000)
+        }
+        return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+    }, [isResting, isPaused, restRemaining])
 
     const filteredExercises = exerciseDB.filter(
         (e) =>
@@ -215,7 +276,7 @@ export default function WorkoutPage() {
                                     {/* Add Set Button */}
                                     <div className="px-4 py-3 bg-surface-light/50 border-t border-border flex items-center gap-3">
                                         <button
-                                            onClick={() => addSet(exIdx)}
+                                            onClick={() => { addSet(exIdx); startRestTimer() }}
                                             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:brightness-110 transition"
                                         >
                                             <Plus className="w-4 h-4" /> Add Set
@@ -231,6 +292,59 @@ export default function WorkoutPage() {
                     </motion.div>
                 ))}
             </div>
+
+            {/* Rest Timer */}
+            <AnimatePresence>
+                {isResting && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface border border-primary/30 rounded-2xl px-6 py-4 shadow-2xl shadow-primary/20 flex items-center gap-5"
+                    >
+                        {/* Circular progress */}
+                        <div className="relative w-14 h-14">
+                            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" className="text-surface-light" strokeWidth="3" />
+                                <circle
+                                    cx="18" cy="18" r="15" fill="none" strokeWidth="3" className="text-primary-light"
+                                    strokeDasharray={`${(restRemaining / restTime) * 94.2} 94.2`}
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-sm font-bold font-mono">{restRemaining}s</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Rest Timer</p>
+                            <div className="flex gap-1 mt-1">
+                                {[30, 60, 90, 120].map(t => (
+                                    <button
+                                        key={t}
+                                        onClick={() => { setRestTime(t); startRestTimer(t) }}
+                                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition ${restTime === t ? 'bg-primary/20 text-primary-light' : 'bg-surface-light text-text-muted hover:text-text'}`}
+                                    >
+                                        {t}s
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => setIsPaused(!isPaused)}
+                                className="p-2 rounded-lg bg-surface-light hover:bg-surface-lighter transition"
+                            >
+                                {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                            </button>
+                            <button
+                                onClick={stopRestTimer}
+                                className="p-2 rounded-lg bg-surface-light hover:bg-surface-lighter transition text-text-muted hover:text-text"
+                            >
+                                <SkipForward className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Add Exercise Button */}
             <button

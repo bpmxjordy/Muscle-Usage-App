@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useWorkoutStore } from '../stores/workoutStore'
 import { useAuthStore } from '../stores/authStore'
 import { exercises as exerciseDB } from '../data/exercises'
@@ -12,9 +12,15 @@ import {
     Search,
     Dumbbell,
     GripVertical,
+    Calendar,
+    CalendarOff,
+    List,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { RoutineExercise, Exercise } from '../types'
+import type { RoutineExercise, Exercise, Routine } from '../types'
+
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const
+const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
 export default function RoutinesPage() {
     const { user } = useAuthStore()
@@ -27,6 +33,27 @@ export default function RoutinesPage() {
     const [showExercisePicker, setShowExercisePicker] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const [isSaving, setIsSaving] = useState(false)
+    const [viewMode, setViewMode] = useState<'weekly' | 'all'>('weekly')
+    const [activeDay, setActiveDay] = useState(() => {
+        const today = new Date().getDay()
+        // JS getDay(): 0=Sun, 1=Mon... convert to our 0=Mon index
+        return today === 0 ? 6 : today - 1
+    })
+
+    // Group routines by day_of_week
+    const routinesByDay = useMemo(() => {
+        const grouped: Record<string, Routine[]> = {}
+        WEEKDAYS.forEach(wd => { grouped[wd] = [] })
+        let unassigned: Routine[] = []
+        routines.forEach(r => {
+            if (r.day_of_week && grouped[r.day_of_week]) {
+                grouped[r.day_of_week].push(r)
+            } else {
+                unassigned.push(r)
+            }
+        })
+        return { grouped, unassigned }
+    }, [routines])
 
     const addExerciseToRoutine = (exercise: Exercise) => {
         const newRE: RoutineExercise = {
@@ -229,67 +256,135 @@ export default function RoutinesPage() {
                 )}
             </AnimatePresence>
 
-            {/* Routine List */}
-            {routines.length === 0 && !showCreator ? (
-                <div className="bg-surface border border-border rounded-2xl p-12 text-center">
-                    <ClipboardList className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-40" />
-                    <p className="text-text-muted">No routines yet.</p>
-                    <p className="text-sm text-text-muted mt-1">
-                        Create your first routine to get started!
-                    </p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {routines.map((routine) => (
+            {/* View Mode Tabs */}
+            <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1">
+                <button
+                    onClick={() => setViewMode('weekly')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'weekly'
+                        ? 'bg-primary/10 text-primary-light'
+                        : 'text-text-muted hover:text-text'
+                        }`}
+                >
+                    <Calendar className="w-4 h-4" /> Weekly Schedule
+                </button>
+                <button
+                    onClick={() => setViewMode('all')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'all'
+                        ? 'bg-primary/10 text-primary-light'
+                        : 'text-text-muted hover:text-text'
+                        }`}
+                >
+                    <List className="w-4 h-4" /> All Routines ({routines.length})
+                </button>
+            </div>
+
+            {/* Weekly Schedule View */}
+            {viewMode === 'weekly' && (
+                <div className="space-y-4">
+                    {/* Day Slider */}
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                        {WEEKDAYS.map((wd, idx) => {
+                            const count = routinesByDay.grouped[wd]?.length || 0
+                            const isToday = idx === (new Date().getDay() === 0 ? 6 : new Date().getDay() - 1)
+                            return (
+                                <button
+                                    key={wd}
+                                    onClick={() => setActiveDay(idx)}
+                                    className={`flex-shrink-0 px-4 py-3 rounded-xl text-sm font-medium transition-all relative ${activeDay === idx
+                                        ? 'bg-gradient-to-b from-primary to-primary-dark text-white shadow-lg shadow-primary/25'
+                                        : 'bg-surface border border-border text-text-muted hover:border-primary/30 hover:text-text'
+                                        }`}
+                                >
+                                    <span className="block text-xs opacity-70">{WEEKDAY_SHORT[idx]}</span>
+                                    <span className="block text-lg font-bold">{count}</span>
+                                    {isToday && (
+                                        <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${activeDay === idx ? 'bg-white' : 'bg-primary'
+                                            }`} />
+                                    )}
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    {/* Routines for selected day */}
+                    <AnimatePresence mode="wait">
                         <motion.div
-                            key={routine.id}
+                            key={activeDay}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-surface border border-border rounded-2xl p-5 hover:border-primary/30 transition-colors group"
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.15 }}
+                            className="space-y-3"
                         >
-                            <div className="flex items-start justify-between mb-3">
-                                <div>
-                                    <h3 className="font-bold text-lg">{routine.name}</h3>
-                                    {routine.description && (
-                                        <p className="text-sm text-text-muted mt-0.5">
-                                            {routine.description}
-                                        </p>
-                                    )}
-                                </div>
-                                <button
-                                    onClick={() => handleDeleteRoutine(routine.id)}
-                                    className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition opacity-0 group-hover:opacity-100"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
+                            <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wide">
+                                {WEEKDAYS[activeDay]}
+                            </h3>
 
-                            <div className="space-y-1.5 mb-4">
-                                {routine.exercises.slice(0, 4).map((re, i) => (
-                                    <div key={i} className="flex items-center gap-2 text-sm text-text-muted">
-                                        <Dumbbell className="w-3.5 h-3.5" />
-                                        <span className="truncate">{re.exercise.name}</span>
-                                        <span className="ml-auto text-xs">
-                                            {re.target_sets}×{re.target_reps_min}-{re.target_reps_max}
-                                        </span>
-                                    </div>
-                                ))}
-                                {routine.exercises.length > 4 && (
-                                    <p className="text-xs text-text-muted pl-5">
-                                        +{routine.exercises.length - 4} more
+                            {(routinesByDay.grouped[WEEKDAYS[activeDay]]?.length || 0) === 0 ? (
+                                <div className="bg-surface border border-dashed border-border rounded-2xl p-8 text-center">
+                                    <CalendarOff className="w-8 h-8 text-text-muted mx-auto mb-2 opacity-30" />
+                                    <p className="text-text-muted text-sm">No routines for {WEEKDAYS[activeDay]}</p>
+                                    <p className="text-xs text-text-muted mt-1">
+                                        Use the <span className="text-primary-light font-medium">AI Trainer</span> to generate & schedule routines
                                     </p>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={() => handleStartRoutine(routine)}
-                                className="w-full py-2.5 rounded-xl bg-primary/10 text-primary-light font-medium text-sm flex items-center justify-center gap-2 hover:bg-primary/20 transition"
-                            >
-                                <Play className="w-4 h-4" /> Start Routine
-                            </button>
+                                </div>
+                            ) : (
+                                routinesByDay.grouped[WEEKDAYS[activeDay]].map((routine) => (
+                                    <RoutineCard
+                                        key={routine.id}
+                                        routine={routine}
+                                        onStart={() => handleStartRoutine(routine)}
+                                        onDelete={() => handleDeleteRoutine(routine.id)}
+                                    />
+                                ))
+                            )}
                         </motion.div>
-                    ))}
+                    </AnimatePresence>
+
+                    {/* Unassigned routines */}
+                    {routinesByDay.unassigned.length > 0 && (
+                        <div className="space-y-3 pt-4 border-t border-border">
+                            <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wide">
+                                Unscheduled ({routinesByDay.unassigned.length})
+                            </h3>
+                            {routinesByDay.unassigned.map((routine) => (
+                                <RoutineCard
+                                    key={routine.id}
+                                    routine={routine}
+                                    onStart={() => handleStartRoutine(routine)}
+                                    onDelete={() => handleDeleteRoutine(routine.id)}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
+            )}
+
+            {/* All Routines View */}
+            {viewMode === 'all' && (
+                <>
+                    {routines.length === 0 && !showCreator ? (
+                        <div className="bg-surface border border-border rounded-2xl p-12 text-center">
+                            <ClipboardList className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-40" />
+                            <p className="text-text-muted">No routines yet.</p>
+                            <p className="text-sm text-text-muted mt-1">
+                                Create your first routine to get started!
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {routines.map((routine) => (
+                                <RoutineCard
+                                    key={routine.id}
+                                    routine={routine}
+                                    onStart={() => handleStartRoutine(routine)}
+                                    onDelete={() => handleDeleteRoutine(routine.id)}
+                                    showDay
+                                />
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Exercise Picker Modal */}
@@ -344,5 +439,69 @@ export default function RoutinesPage() {
                 )}
             </AnimatePresence>
         </div>
+    )
+}
+
+// ─── Reusable Routine Card Component ─────────────────────────────────────
+function RoutineCard({ routine, onStart, onDelete, showDay }: {
+    routine: Routine
+    onStart: () => void
+    onDelete: () => void
+    showDay?: boolean
+}) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-surface border border-border rounded-2xl p-5 hover:border-primary/30 transition-colors group"
+        >
+            <div className="flex items-start justify-between mb-3">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-lg truncate">{routine.name}</h3>
+                        {showDay && routine.day_of_week && (
+                            <span className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary-light text-xs font-medium">
+                                {routine.day_of_week}
+                            </span>
+                        )}
+                    </div>
+                    {routine.description && (
+                        <p className="text-sm text-text-muted mt-0.5 line-clamp-2">
+                            {routine.description}
+                        </p>
+                    )}
+                </div>
+                <button
+                    onClick={onDelete}
+                    className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
+            </div>
+
+            <div className="space-y-1.5 mb-4">
+                {routine.exercises.slice(0, 4).map((re, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm text-text-muted">
+                        <Dumbbell className="w-3.5 h-3.5" />
+                        <span className="truncate">{re.exercise.name}</span>
+                        <span className="ml-auto text-xs">
+                            {re.target_sets}×{re.target_reps_min}-{re.target_reps_max}
+                        </span>
+                    </div>
+                ))}
+                {routine.exercises.length > 4 && (
+                    <p className="text-xs text-text-muted pl-5">
+                        +{routine.exercises.length - 4} more
+                    </p>
+                )}
+            </div>
+
+            <button
+                onClick={onStart}
+                className="w-full py-2.5 rounded-xl bg-primary/10 text-primary-light font-medium text-sm flex items-center justify-center gap-2 hover:bg-primary/20 transition"
+            >
+                <Play className="w-4 h-4" /> Start Routine
+            </button>
+        </motion.div>
     )
 }

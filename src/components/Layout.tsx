@@ -8,9 +8,11 @@ import {
     BarChart3,
     Users,
     Heart,
+    Apple,
     User,
     LogOut,
     Flame,
+    Sparkles,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -18,9 +20,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/workout', icon: Dumbbell, label: 'Workout' },
+    { to: '/ai-trainer', icon: Sparkles, label: 'AI Trainer' },
     { to: '/routines', icon: ClipboardList, label: 'Routines' },
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/social', icon: Users, label: 'Social' },
+    { to: '/nutrition', icon: Apple, label: 'Nutrition' },
     { to: '/health', icon: Heart, label: 'Health' },
     { to: '/profile', icon: User, label: 'Profile' },
 ]
@@ -124,10 +128,10 @@ export default function Layout() {
                     <Outlet />
                 </div>
 
-                {/* Mobile Bottom Nav */}
+                {/* Mobile Bottom Nav — only the 5 most important items */}
                 <nav className="md:hidden fixed bottom-0 left-0 right-0 glass border-t-0 z-50 safe-area-pb rounded-t-2xl">
-                    <div className="grid grid-cols-7 h-16">
-                        {navItems.map((item) => (
+                    <div className="grid grid-cols-5 h-16">
+                        {navItems.filter(item => ['/', '/workout', '/ai-trainer', '/nutrition', '/profile'].includes(item.to)).map((item) => (
                             <NavLink
                                 key={item.to}
                                 to={item.to}

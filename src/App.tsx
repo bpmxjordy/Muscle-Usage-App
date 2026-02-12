@@ -7,9 +7,11 @@ import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import WorkoutPage from './pages/WorkoutPage'
 import RoutinesPage from './pages/RoutinesPage'
+import AITrainerPage from './pages/AITrainerPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import SocialPage from './pages/SocialPage'
 import HealthPage from './pages/HealthPage'
+import NutritionPage from './pages/NutritionPage'
 import ProfilePage from './pages/ProfilePage'
 import './index.css'
 
@@ -64,9 +66,11 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="workout" element={<WorkoutPage />} />
             <Route path="routines" element={<RoutinesPage />} />
+            <Route path="ai-trainer" element={<AITrainerPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="social" element={<SocialPage />} />
             <Route path="health" element={<HealthPage />} />
+            <Route path="nutrition" element={<NutritionPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

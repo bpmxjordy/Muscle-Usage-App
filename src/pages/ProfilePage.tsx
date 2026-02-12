@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/authStore'
 import { useWorkoutStore } from '../stores/workoutStore'
-import { Dumbbell, Award, TrendingUp, LogOut, Save, Camera, Loader2, Check } from 'lucide-react'
+import { Dumbbell, Award, TrendingUp, LogOut, Save, Camera, Loader2, Check, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
@@ -16,6 +16,7 @@ export default function ProfilePage() {
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [uploadMsg, setUploadMsg] = useState<string | null>(null)
 
     const totalVolume = workouts.reduce((a, w) => a + w.exercises.reduce((b, e) => b + e.sets.reduce((c, s) => c + s.reps * s.weight_kg, 0), 0), 0)
     const inputClass = "w-full px-4 py-2.5 bg-surface-light border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
@@ -36,15 +37,21 @@ export default function ProfilePage() {
 
             if (uploadErr) throw uploadErr
 
-            // Get public URL
+            // Get public URL with cache-busting timestamp
             const { data: urlData } = supabase.storage
                 .from('avatars')
                 .getPublicUrl(path)
 
+            const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`
+
             // Update profile
-            await updateProfile({ avatar_url: urlData.publicUrl })
-        } catch (err) {
+            await updateProfile({ avatar_url: avatarUrl })
+            setUploadMsg('Photo updated!')
+            setTimeout(() => setUploadMsg(null), 3000)
+        } catch (err: any) {
             console.error('Upload failed:', err)
+            setUploadMsg(err?.message || 'Upload failed. Make sure the "avatars" bucket exists in Supabase Storage.')
+            setTimeout(() => setUploadMsg(null), 5000)
         } finally {
             setUploading(false)
         }
@@ -101,6 +108,12 @@ export default function ProfilePage() {
                 <h1 className="text-2xl font-bold mt-4">{user?.display_name}</h1>
                 <p className="text-text-muted">@{user?.username}</p>
                 <p className="text-xs text-text-muted mt-1">Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
+                {uploadMsg && (
+                    <p className={`text-xs mt-2 flex items-center gap-1 justify-center ${uploadMsg.includes('failed') || uploadMsg.includes('Failed') ? 'text-danger' : 'text-success'}`}>
+                        {uploadMsg.includes('failed') || uploadMsg.includes('Failed') ? <AlertCircle className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+                        {uploadMsg}
+                    </p>
+                )}
             </motion.div>
 
             {/* Stats */}
